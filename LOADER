@@ -1,0 +1,21 @@
+-- ========================================================
+--   SPOTIFY PLAYER LOADER (AUTO-UPDATING)
+--   DEVELOPER: YUTASTUDIO
+-- ========================================================
+
+local GitHubRawURL = "https://raw.githubusercontent.com/YUTASTUDIO/YUTASTUDIO/refs/heads/main/SPOTIFY%20SCRIPT"
+
+local success, scriptContent = pcall(function()
+    return game:HttpGet(GitHubRawURL)
+end)
+
+if success and scriptContent then
+    local launch, err = loadstring(scriptContent)
+    if launch then
+        launch()
+    else
+        warn("YUTASTUDIO Loader: Error parsing script - " .. tostring(err))
+    end
+else
+    warn("YUTASTUDIO Loader: Failed to fetch latest update from GitHub.")
+end
