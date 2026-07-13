@@ -456,7 +456,7 @@ JoinDiscordBtn.MouseButton1Click:Connect(function()
     end
     
     task.wait(2.5)
-    JoinDiscordBtn.Text = "💙 JOIN OUR DISCORD"
+    JoinDiscordBtn.Text = "JOIN OUR DISCORD"
     JoinDiscordBtn.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
 end)
 
