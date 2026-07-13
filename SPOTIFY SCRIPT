@@ -1,5 +1,5 @@
 -- ========================================================
---   SPOTIFY PLAYER CONTROLLER (COMPACT + FPS BOOST)
+--   SPOTIFY SCRIPT 
 --   DEVELOPER: YUTASTUDIO (UPDATED)
 --   COMPATIBILITY: ANY EXECUTOR (PC & MOBILE)
 -- ========================================================
@@ -130,7 +130,7 @@ local Header = Instance.new("TextLabel")
 Header.Name = "Header"
 Header.Size = UDim2.new(1, 0, 0, 30)
 Header.BackgroundTransparency = 1
-Header.Text = "SPOTIFY CONTROLLER"
+Header.Text = "SPOTIFY SCRIPT"
 Header.TextColor3 = Color3.fromRGB(30, 215, 96)
 Header.Font = Enum.Font.GothamBold
 Header.TextSize = 11
@@ -400,7 +400,7 @@ PlayButton.MouseButton1Click:Connect(function()
         Sound:Play()
         SongInfo.Text = "Playing ID: " .. id
     else
-        SongInfo.Text = "Error: Invalid ID String"
+        SongInfo.Text = "Error: Invalid audio Id"
     end
 end)
 
