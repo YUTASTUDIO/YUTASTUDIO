@@ -1,0 +1,534 @@
+-- ========================================================
+--   SPOTIFY PLAYER + FEEDBACK SYSTEM
+--   DEVELOPER: YUTASTUDIO
+--   COMPATIBILITY: ANY EXECUTOR (PC & MOBILE)
+-- ========================================================
+
+-- 1. CONFIGURATION
+getgenv().FeedbackWebhook = "https://discord.com/api/webhooks/1526093101674795040/FT-JlNbYMIBKEcQnlXjeZ0QIwJY1upANRUpxJhfTpo75SIkYZo5XqBwBSVhBIEtXedWf"
+getgenv().DiscordInvite = "https://discord.gg/Q4jMvrYMg"
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
+local HttpService = game:GetService("HttpService")
+local Lighting = game:GetService("Lighting")
+
+local localPlayer = Players.LocalPlayer
+local targetParent = CoreGui or localPlayer:WaitForChild("PlayerGui")
+
+-- HTTP Request wrapper to support ANY executor
+local requestFunction = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
+
+-- Clean up any existing instance of the UI
+if targetParent:FindFirstChild("RobloxSpotifyUI") then
+    targetParent.RobloxSpotifyUI:Destroy()
+end
+
+-- Create ScreenGui
+local SpotifyUI = Instance.new("ScreenGui")
+SpotifyUI.Name = "RobloxSpotifyUI"
+SpotifyUI.ResetOnSpawn = false
+SpotifyUI.Parent = targetParent
+
+----------------------------------------------------
+-- SHADER EFFECTS SETUP (Lighting Engine Presets)
+----------------------------------------------------
+local SpotifyBloom = Lighting:FindFirstChild("SpotifyBloom") or Instance.new("BloomEffect")
+SpotifyBloom.Name = "SpotifyBloom"
+SpotifyBloom.Intensity = 1.2
+SpotifyBloom.Size = 24
+SpotifyBloom.Threshold = 0.85
+SpotifyBloom.Enabled = false
+SpotifyBloom.Parent = Lighting
+
+local SpotifyColorCorr = Lighting:FindFirstChild("SpotifyColorCorr") or Instance.new("ColorCorrectionEffect")
+SpotifyColorCorr.Name = "SpotifyColorCorr"
+SpotifyColorCorr.Contrast = 0.15
+SpotifyColorCorr.Saturation = 0.3
+SpotifyColorCorr.TintColor = Color3.fromRGB(255, 250, 245)
+SpotifyColorCorr.Enabled = false
+SpotifyColorCorr.Parent = Lighting
+
+local SpotifyBlur = Lighting:FindFirstChild("SpotifyBlur") or Instance.new("BlurEffect")
+SpotifyBlur.Name = "SpotifyBlur"
+SpotifyBlur.Size = 3
+SpotifyBlur.Enabled = false
+SpotifyBlur.Parent = Lighting
+
+----------------------------------------------------
+-- FLOATING TOGGLE BUTTON (FIXED GREEN ICON SETUP)
+----------------------------------------------------
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Name = "ToggleButton"
+ToggleButton.Size = UDim2.new(0, 48, 0, 48)
+ToggleButton.Position = UDim2.new(0, 15, 0.4, 0)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+ToggleButton.Text = "" -- Empty text since we are overlaying an image
+ToggleButton.ZIndex = 10
+ToggleButton.Parent = SpotifyUI
+
+local ToggleCorner = Instance.new("UICorner")
+ToggleCorner.CornerRadius = UDim.new(1, 0) -- Perfect Circle Frame
+ToggleCorner.Parent = ToggleButton
+
+local ToggleStroke = Instance.new("UIStroke")
+ToggleStroke.Color = Color3.fromRGB(30, 215, 96)
+ToggleStroke.Thickness = 2
+ToggleStroke.Parent = ToggleButton
+
+-- Inside Image Label (Uses a white base asset so tinting works perfectly)
+local ToggleIcon = Instance.new("ImageLabel")
+ToggleIcon.Name = "ToggleIcon"
+ToggleIcon.Size = UDim2.new(0.6, 0, 0.6, 0) -- 60% size so it sits nicely inside the circle padding
+ToggleIcon.Position = UDim2.new(0.5, 0, 0.5, 0)
+ToggleIcon.AnchorPoint = Vector2.new(0.5, 0.5)
+ToggleIcon.BackgroundTransparency = 1
+ToggleIcon.Image = "rbxassetid://7301016335" -- White silhouette asset ID
+ToggleIcon.ImageColor3 = Color3.fromRGB(30, 215, 96) -- Flawlessly tints it to Spotify Green
+ToggleIcon.ScaleType = Enum.ScaleType.Fit
+ToggleIcon.ZIndex = 11
+ToggleIcon.Parent = ToggleButton
+
+----------------------------------------------------
+-- MAIN UI FRAME
+----------------------------------------------------
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 320, 0, 325)
+MainFrame.Position = UDim2.new(0.5, -160, 0.4, -162)
+MainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Visible = true
+MainFrame.Parent = SpotifyUI
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 12)
+UICorner.Parent = MainFrame
+
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Color = Color3.fromRGB(30, 215, 96)
+UIStroke.Thickness = 2
+UIStroke.Parent = MainFrame
+
+-- Header text
+local Header = Instance.new("TextLabel")
+Header.Name = "Header"
+Header.Size = UDim2.new(1, 0, 0, 30)
+Header.BackgroundTransparency = 1
+Header.Text = "SPOTIFY PLAYER | BY YUTASTUDIO"
+Header.TextColor3 = Color3.fromRGB(30, 215, 96)
+Header.Font = Enum.Font.GothamBold
+Header.TextSize = 11
+Header.Parent = MainFrame
+
+-- Audio ID Input Field
+local SongInput = Instance.new("TextBox")
+SongInput.Name = "SongInput"
+SongInput.Size = UDim2.new(0.8, 0, 0, 30)
+SongInput.Position = UDim2.new(0.1, 0, 0.11, 0)
+SongInput.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+SongInput.Text = ""
+SongInput.PlaceholderText = "Paste Roblox Audio ID here..."
+SongInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+SongInput.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
+SongInput.Font = Enum.Font.Gotham
+SongInput.TextSize = 12
+SongInput.ClipsDescendants = true
+SongInput.Parent = MainFrame
+
+local InputCorner = Instance.new("UICorner")
+InputCorner.CornerRadius = UDim.new(0, 6)
+InputCorner.Parent = SongInput
+
+-- Song Information Status
+local SongInfo = Instance.new("TextLabel")
+SongInfo.Name = "SongInfo"
+SongInfo.Size = UDim2.new(0.8, 0, 0, 20)
+SongInfo.Position = UDim2.new(0.1, 0, 0.23, 0)
+SongInfo.BackgroundTransparency = 1
+SongInfo.Text = "Status: Idle"
+SongInfo.TextColor3 = Color3.fromRGB(180, 180, 180)
+SongInfo.Font = Enum.Font.Gotham
+SongInfo.TextSize = 11
+SongInfo.TextTruncate = Enum.TextTruncate.AtEnd
+SongInfo.Parent = MainFrame
+
+-- Music Progress Bar (Background)
+local ProgressBarBg = Instance.new("Frame")
+ProgressBarBg.Name = "ProgressBarBg"
+ProgressBarBg.Size = UDim2.new(0.8, 0, 0, 4)
+ProgressBarBg.Position = UDim2.new(0.1, 0, 0.32, 0)
+ProgressBarBg.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+ProgressBarBg.BorderSizePixel = 0
+ProgressBarBg.Parent = MainFrame
+
+local BarCorner = Instance.new("UICorner")
+BarCorner.CornerRadius = UDim.new(0, 2)
+BarCorner.Parent = ProgressBarBg
+
+-- Dynamic Progress Bar Fill
+local ProgressBarFill = Instance.new("Frame")
+ProgressBarFill.Name = "ProgressBarFill"
+ProgressBarFill.Size = UDim2.new(0, 0, 1, 0)
+ProgressBarFill.BackgroundColor3 = Color3.fromRGB(30, 215, 96)
+ProgressBarFill.BorderSizePixel = 0
+ProgressBarFill.Parent = ProgressBarBg
+
+local FillCorner = Instance.new("UICorner")
+FillCorner.CornerRadius = UDim.new(0, 2)
+FillCorner.Parent = ProgressBarFill
+
+----------------------------------------------------
+-- CONTROL BUTTONS ROW (Play, Pause, Vol, Shader)
+----------------------------------------------------
+-- Play Button
+local PlayButton = Instance.new("TextButton")
+PlayButton.Name = "PlayButton"
+PlayButton.Size = UDim2.new(0.2, 0, 0, 25)
+PlayButton.Position = UDim2.new(0.06, 0, 0.38, 0)
+PlayButton.BackgroundColor3 = Color3.fromRGB(30, 215, 96)
+PlayButton.Text = "PLAY"
+PlayButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+PlayButton.Font = Enum.Font.GothamBold
+PlayButton.TextSize = 10
+PlayButton.Parent = MainFrame
+
+local PlayCorner = Instance.new("UICorner")
+PlayCorner.CornerRadius = UDim.new(0, 6)
+PlayCorner.Parent = PlayButton
+
+-- Pause Button
+local PauseButton = Instance.new("TextButton")
+PauseButton.Name = "PauseButton"
+PauseButton.Size = UDim2.new(0.2, 0, 0, 25)
+PauseButton.Position = UDim2.new(0.28, 0, 0.38, 0)
+PauseButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+PauseButton.Text = "PAUSE"
+PauseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+PauseButton.Font = Enum.Font.GothamBold
+PauseButton.TextSize = 10
+PauseButton.Parent = MainFrame
+
+local PauseCorner = Instance.new("UICorner")
+PauseCorner.CornerRadius = UDim.new(0, 6)
+PauseCorner.Parent = PauseButton
+
+-- Volume Button
+local VolButton = Instance.new("TextButton")
+VolButton.Name = "VolButton"
+VolButton.Size = UDim2.new(0.2, 0, 0, 25)
+VolButton.Position = UDim2.new(0.50, 0, 0.38, 0)
+VolButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+VolButton.Text = "VOL: 50%"
+VolButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+VolButton.Font = Enum.Font.GothamBold
+VolButton.TextSize = 9
+VolButton.Parent = MainFrame
+
+local VolCorner = Instance.new("UICorner")
+VolCorner.CornerRadius = UDim.new(0, 6)
+VolCorner.Parent = VolButton
+
+-- Shader Button
+local ShaderButton = Instance.new("TextButton")
+ShaderButton.Name = "ShaderButton"
+ShaderButton.Size = UDim2.new(0.2, 0, 0, 25)
+ShaderButton.Position = UDim2.new(0.72, 0, 0.38, 0)
+ShaderButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+ShaderButton.Text = "HD: OFF"
+ShaderButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ShaderButton.Font = Enum.Font.GothamBold
+ShaderButton.TextSize = 9
+ShaderButton.Parent = MainFrame
+
+local ShaderCorner = Instance.new("UICorner")
+ShaderCorner.CornerRadius = UDim.new(0, 6)
+ShaderCorner.Parent = ShaderButton
+
+----------------------------------------------------
+-- FEEDBACK UI SECTION
+----------------------------------------------------
+local LineDivider = Instance.new("Frame")
+LineDivider.Name = "LineDivider"
+LineDivider.Size = UDim2.new(0.9, 0, 0, 1)
+LineDivider.Position = UDim2.new(0.05, 0, 0.50, 0)
+LineDivider.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+LineDivider.BorderSizePixel = 0
+LineDivider.Parent = MainFrame
+
+local FeedbackHeader = Instance.new("TextLabel")
+FeedbackHeader.Name = "FeedbackHeader"
+FeedbackHeader.Size = UDim2.new(1, 0, 0, 20)
+FeedbackHeader.Position = UDim2.new(0, 0, 0.52, 0)
+FeedbackHeader.BackgroundTransparency = 1
+FeedbackHeader.Text = "SEND FEEDBACK TO DEVELOPER"
+FeedbackHeader.TextColor3 = Color3.fromRGB(255, 255, 255)
+FeedbackHeader.Font = Enum.Font.GothamBold
+FeedbackHeader.TextSize = 10
+FeedbackHeader.Parent = MainFrame
+
+local FeedbackInput = Instance.new("TextBox")
+FeedbackInput.Name = "FeedbackInput"
+FeedbackInput.Size = UDim2.new(0.8, 0, 0, 40)
+FeedbackInput.Position = UDim2.new(0.1, 0, 0.60, 0)
+FeedbackInput.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+FeedbackInput.Text = ""
+FeedbackInput.PlaceholderText = "Type your ideas, bugs, or feedback here..."
+FeedbackInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+FeedbackInput.PlaceholderColor3 = Color3.fromRGB(120, 120, 120)
+FeedbackInput.Font = Enum.Font.Gotham
+FeedbackInput.TextSize = 11
+FeedbackInput.TextWrapped = true
+FeedbackInput.ClearTextOnFocus = false
+FeedbackInput.Parent = MainFrame
+
+local FeedbackCorner = Instance.new("UICorner")
+FeedbackCorner.CornerRadius = UDim.new(0, 6)
+FeedbackCorner.Parent = FeedbackInput
+
+local SendFeedbackBtn = Instance.new("TextButton")
+SendFeedbackBtn.Name = "SendFeedbackBtn"
+SendFeedbackBtn.Size = UDim2.new(0.8, 0, 0, 25)
+SendFeedbackBtn.Position = UDim2.new(0.1, 0, 0.75, 0)
+SendFeedbackBtn.BackgroundColor3 = Color3.fromRGB(30, 215, 96)
+SendFeedbackBtn.Text = "SUBMIT FEEDBACK"
+SendFeedbackBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+SendFeedbackBtn.Font = Enum.Font.GothamBold
+SendFeedbackBtn.TextSize = 11
+SendFeedbackBtn.Parent = MainFrame
+
+local SendCorner = Instance.new("UICorner")
+SendCorner.CornerRadius = UDim.new(0, 6)
+SendCorner.Parent = SendFeedbackBtn
+
+-- JOIN DISCORD BUTTON
+local JoinDiscordBtn = Instance.new("TextButton")
+JoinDiscordBtn.Name = "JoinDiscordBtn"
+JoinDiscordBtn.Size = UDim2.new(0.8, 0, 0, 25)
+JoinDiscordBtn.Position = UDim2.new(0.1, 0, 0.85, 0)
+JoinDiscordBtn.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
+JoinDiscordBtn.Text = "JOIN OUR DISCORD"
+JoinDiscordBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+JoinDiscordBtn.Font = Enum.Font.GothamBold
+JoinDiscordBtn.TextSize = 11
+JoinDiscordBtn.Parent = MainFrame
+
+local DiscordCorner = Instance.new("UICorner")
+DiscordCorner.CornerRadius = UDim.new(0, 6)
+DiscordCorner.Parent = JoinDiscordBtn
+
+----------------------------------------------------
+-- VISUAL CREDITS LABEL
+----------------------------------------------------
+local CreditsText = Instance.new("TextLabel")
+CreditsText.Name = "CreditsText"
+CreditsText.Size = UDim2.new(1, 0, 0, 15)
+CreditsText.Position = UDim2.new(0, 0, 0.94, 0)
+CreditsText.BackgroundTransparency = 1
+CreditsText.Text = "DEVELOPER: YUTASTUDIO"
+CreditsText.TextColor3 = Color3.fromRGB(30, 215, 96)
+CreditsText.Font = Enum.Font.GothamBold
+CreditsText.TextSize = 9
+CreditsText.Parent = MainFrame
+
+----------------------------------------------------
+-- SYSTEM UI INTERACTION LOGIC
+----------------------------------------------------
+
+-- Toggle Action (On / Off Click)
+ToggleButton.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
+end)
+
+-- Universal Draggable Object Function (PC & Mobile Setup)
+local function makeDraggable(frame)
+    local dragStart, startPos, dragInput
+    local function updateInput(input)
+        local delta = input.Position - dragStart
+        frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragStart = input.Position
+            startPos = frame.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then dragStart = nil end
+            end)
+        end
+    end)
+
+    frame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragStart then updateInput(input) end
+    end)
+end
+
+makeDraggable(MainFrame)
+makeDraggable(ToggleButton)
+
+-- Sound Engine Setup
+local Sound = workspace:FindFirstChild("RobloxSpotifySound")
+if not Sound then
+    Sound = Instance.new("Sound")
+    Sound.Name = "RobloxSpotifySound"
+    Sound.Parent = workspace
+end
+Sound.Volume = 0.5
+
+-- Play Button Logic
+PlayButton.MouseButton1Click:Connect(function()
+    local id = tonumber(SongInput.Text:match("%d+"))
+    if id then
+        Sound.SoundId = "rbxassetid://" .. id
+        Sound:Play()
+        SongInfo.Text = "Playing ID: " .. id
+    else
+        SongInfo.Text = "Error: Invalid ID String"
+    end
+end)
+
+-- Pause/Resume Logic
+PauseButton.MouseButton1Click:Connect(function()
+    if Sound.IsPlaying then
+        Sound:Pause()
+        PauseButton.Text = "RESUME"
+    elseif Sound.IsLoaded and not Sound.IsPlaying then
+        Sound:Resume()
+        PauseButton.Text = "PAUSE"
+    end
+end)
+
+-- Volume Controls
+local currentVol = 50
+VolButton.MouseButton1Click:Connect(function()
+    currentVol = currentVol + 25
+    if currentVol > 100 then currentVol = 0 end
+    Sound.Volume = currentVol / 100
+    VolButton.Text = "VOL: " .. currentVol .. "%"
+end)
+
+----------------------------------------------------
+-- SHADER TOGGLE LOGIC
+----------------------------------------------------
+local shaderEnabled = false
+ShaderButton.MouseButton1Click:Connect(function()
+    shaderEnabled = not shaderEnabled
+    SpotifyBloom.Enabled = shaderEnabled
+    SpotifyColorCorr.Enabled = shaderEnabled
+    SpotifyBlur.Enabled = shaderEnabled
+    
+    if shaderEnabled then
+        ShaderButton.Text = "HD: ON"
+        ShaderButton.BackgroundColor3 = Color3.fromRGB(30, 215, 96)
+        ShaderButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+    else
+        ShaderButton.Text = "HD: OFF"
+        ShaderButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        ShaderButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    end
+end)
+
+-- Live Time Tracking Progress Bar Loop
+task.spawn(function()
+    while task.wait(0.5) do
+        if not MainFrame or not MainFrame.Parent then break end
+        if Sound.IsPlaying and Sound.TimeLength > 0 then
+            local percent = Sound.TimePosition / Sound.TimeLength
+            ProgressBarFill.Size = UDim2.new(percent, 0, 1, 0)
+            local currentMin, currentSec = math.floor(Sound.TimePosition / 60), math.floor(Sound.TimePosition % 60)
+            local totalMin, totalSec = math.floor(Sound.TimeLength / 60), math.floor(Sound.TimeLength % 60)
+            SongInfo.Text = string.format("Time: %02d:%02d / %02d:%02d", currentMin, currentSec, totalMin, totalSec)
+        end
+    end
+end)
+
+----------------------------------------------------
+-- DISCORD INVITE LINK CLIPBOARD LOGIC
+----------------------------------------------------
+JoinDiscordBtn.MouseButton1Click:Connect(function()
+    local inviteLink = getgenv().DiscordInvite
+    
+    if setclipboard or toclipboard then
+        local copyFunc = setclipboard or toclipboard
+        copyFunc(inviteLink)
+        JoinDiscordBtn.Text = "✅ LINK COPIED TO CLIPBOARD!"
+        JoinDiscordBtn.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
+    else
+        JoinDiscordBtn.Text = "❌ EXECUTOR LACKS CLIPBOARD FUNCTION!"
+        JoinDiscordBtn.BackgroundColor3 = Color3.fromRGB(231, 76, 60)
+    end
+    
+    task.wait(2.5)
+    JoinDiscordBtn.Text = "JOIN OUR DISCORD"
+    JoinDiscordBtn.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
+end)
+
+----------------------------------------------------
+-- WEBHOOK FEEDBACK SUBMISSION LOGIC
+----------------------------------------------------
+SendFeedbackBtn.MouseButton1Click:Connect(function()
+    local feedbackText = FeedbackInput.Text
+    if feedbackText == "" or feedbackText == "Type your ideas, bugs, or feedback here..." then
+        SendFeedbackBtn.Text = "CANNOT SEND EMPTY MESSAGE!"
+        SendFeedbackBtn.BackgroundColor3 = Color3.fromRGB(215, 30, 30)
+        task.wait(2)
+        SendFeedbackBtn.Text = "SUBMIT FEEDBACK"
+        SendFeedbackBtn.BackgroundColor3 = Color3.fromRGB(30, 215, 96)
+        return
+    end
+
+    SendFeedbackBtn.Text = "SENDING..."
+    SendFeedbackBtn.Active = false
+
+    local data = {
+        ["embeds"] = {{
+            ["title"] = "📩 New Script Feedback received!",
+            ["description"] = "**Message:**\n" .. feedbackText,
+            ["color"] = 2021664,
+            ["fields"] = {
+                {["name"] = "User Name", ["value"] = localPlayer.Name, ["inline"] = true},
+                {["name"] = "User ID", ["value"] = tostring(localPlayer.UserId), ["inline"] = true},
+                {["name"] = "Game Info", ["value"] = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name .. " (" .. tostring(game.PlaceId) .. ")", ["inline"] = false}
+            },
+            ["footer"] = {["text"] = "Roblox Spotify Script Monitor | DEVELOPER: YUTASTUDIO"}
+        }}
+    }
+
+    local jsonData = HttpService:JSONEncode(data)
+
+    if requestFunction then
+        local success, err = pcall(function()
+            requestFunction({
+                Url = getgenv().FeedbackWebhook,
+                Method = "POST",
+                Headers = {["Content-Type"] = "application/json"},
+                Body = jsonData
+            })
+        end)
+
+        if success then
+            SendFeedbackBtn.Text = "FEEDBACK SENT! THANK YOU"
+            SendFeedbackBtn.BackgroundColor3 = Color3.fromRGB(30, 215, 96)
+            FeedbackInput.Text = ""
+        else
+            SendFeedbackBtn.Text = "TRANSMISSION ERROR!"
+            SendFeedbackBtn.BackgroundColor3 = Color3.fromRGB(215, 30, 30)
+            warn("Feedback sending error: " .. tostring(err))
+        end
+    else
+        SendFeedbackBtn.Text = "EXECUTOR MISSING HTTP REQ!"
+        SendFeedbackBtn.BackgroundColor3 = Color3.fromRGB(215, 30, 30)
+    end
+
+    task.wait(2)
+    SendFeedbackBtn.Text = "SUBMIT FEEDBACK"
+    SendFeedbackBtn.BackgroundColor3 = Color3.fromRGB(30, 215, 96)
+    SendFeedbackBtn.Active = true
+end)
