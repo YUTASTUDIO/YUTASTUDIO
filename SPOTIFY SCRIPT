@@ -600,7 +600,7 @@ LoadShaderBtn.MouseButton1Click:Connect(function()
     end
     
     task.wait(2.5)
-    LoadShaderBtn.Text = "LOAD EXTERNAL SHADER SCRIPT"
+    LoadShaderBtn.Text = "LOAD SHADER SCRIPT"
     LoadShaderBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
     LoadShaderBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 end)
