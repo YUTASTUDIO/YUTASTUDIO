@@ -977,7 +977,7 @@ LeftGroup:AddButton({
 })
 
 LeftGroup:AddToggle("AntiFallBarrier", {
-    Text = "Anti Fall Barrier",
+    Text = "Anti Fall",
     Default = false,
     Callback = function(State) if State then createAntiFall() else removeAntiFall() end end
 })
@@ -1041,7 +1041,7 @@ CombatGroup:AddToggle("CamlockToggle", {
 })
 
 CombatGroup:AddToggle("KillAura", {
-    Text = "Kill Aura",
+    Text = "Kill Aura (use in fighting round)",
     Default = false,
     Tooltip = "Auto-locks onto closest target, teleports directly inside their body to attack, and returns you safely.",
     Callback = function(State)
@@ -1050,7 +1050,7 @@ CombatGroup:AddToggle("KillAura", {
 })
 
 CombatGroup:AddButton({
-    Text = "Toggle Godmode",
+    Text = "Godmode",
     Func = function()
         godmodeEnabled = not godmodeEnabled
         Library:Notify({
@@ -1100,7 +1100,7 @@ ESPGroup:AddToggle("ESPBombToggle", {
 })
 
 ESPGroup:AddToggle("HitboxESPToggle", {
-    Text = "Hitbox ESP (Wireframe Outline)",
+    Text = "Hitbox ESP",
     Default = false,
     Tooltip = "Renders a neon wireframe outline around the player's entire body model.",
     Callback = function(State)
@@ -1110,7 +1110,7 @@ ESPGroup:AddToggle("HitboxESPToggle", {
 })
 
 ESPGroup:AddToggle("BombESP", {
-    Text = "Bomb Object ESP",
+    Text = "Bomb ESP",
     Default = false,
     Tooltip = "Attaches floating 3D tracking text over the physical explosive item.",
     Callback = function(State)
@@ -1212,7 +1212,7 @@ ProtectGroup:AddToggle("VirtualManagerToggle", {
 })
 
 ProtectGroup:AddToggle("AvoidBanKickToggle", {
-    Text = "Protect Avoid Ban/Kick",
+    Text = "Protect",
     Default = false,
     Tooltip = "Intercepts internal client-level termination requests to block local kicks.",
     Callback = function(State)
@@ -1222,19 +1222,8 @@ ProtectGroup:AddToggle("AvoidBanKickToggle", {
 
 -- Info text
 RightGroup:AddLabel("YUTASTUDIO TIME BOMB:")
-RightGroup:AddLabel("- Real-time Size-Adjustable Hitbox Expander")
-RightGroup:AddLabel("- Dynamic ESP (Red/Green state tracking)")
-RightGroup:AddLabel("- Size-Adjustable Neon Hitbox ESP overlay")
-RightGroup:AddLabel("- Smooth Camera Lock-on (Camlock)")
-RightGroup:AddLabel("- Smooth-TP Anti-Glitch Kill Aura (Inside Target)")
-RightGroup:AddLabel("- Physical Block Anti-Pass Bomb safety evasion")
-RightGroup:AddLabel("- Target-Spawn protected Auto-Pass & Force Transfer (Inside Target)")
-RightGroup:AddLabel("- Humanoid-State Correction Anti-Stun/Ragdoll")
-RightGroup:AddLabel("- Real-time Physics Force Clean Anti-Knockback")
-RightGroup:AddLabel("- Normal Block Anti-Fall platform")
-RightGroup:AddLabel("- Local Non-Collision Anti-Fling Engine")
-RightGroup:AddLabel("- Fast-Rejoin Module")
-RightGroup:AddLabel("- Cross-Device Walkspeed & Infinite Jump")
+RightGroup:AddLabel("- MADE BY YUTASTUDIO")
+
 
 -- Set Up Theme and Save Managers
 local ThemeGroupBox = Tabs.Settings:AddLeftGroupbox("Themes", "palette")
