@@ -1,0 +1,148 @@
+-- Protect against multiple instances running at the same time
+if game.CoreGui:FindFirstChild("LOADER") then
+    game.CoreGui.LOADER:Destroy()
+end
+
+-- ==========================================================
+-- BACKGROUND IMAGE DOWNLOADER
+-- ==========================================================
+local IMAGE_URL = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ52azag0iJvm6f6ebE4epOWcaP270WdqfN2QfvvmPE2w&s=10"
+local FILE_NAME = "loader_bg.png"
+local backgroundImageId = ""
+
+-- Attempt to download and use the external web image via executor functions
+local success, err = pcall(function()
+    if not isfile(FILE_NAME) then
+        writefile(FILE_NAME, game:HttpGet(IMAGE_URL))
+    end
+    backgroundImageId = getcustomasset(FILE_NAME)
+end)
+
+-- Fallback default background color if the image download fails
+if not success or backgroundImageId == "" then
+    warn("Could not load external image, using default background color: " .. tostring(err))
+end
+-- ==========================================================
+
+-- Create the ScreenGui inside CoreGui
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "LOADER"
+ScreenGui.Parent = game.CoreGui
+ScreenGui.ResetOnSpawn = false
+
+-- Main Frame (Acts as the container/holder)
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 350, 0, 250)
+MainFrame.Position = UDim2.new(0.5, -175, 0.5, -125) -- Centered on screen
+MainFrame.BackgroundTransparency = 1 -- Transparent so the image handles the background
+MainFrame.Active = true
+MainFrame.Draggable = true -- Allows you to drag the UI around
+MainFrame.Parent = ScreenGui
+
+-- Background Image
+local BackgroundImage = Instance.new("ImageLabel")
+BackgroundImage.Name = "BackgroundImage"
+BackgroundImage.Size = UDim2.new(1, 0, 1, 0)
+BackgroundImage.BackgroundColor3 = Color3.fromRGB(30, 30, 30) -- Fallback dark gray
+BackgroundImage.BorderSizePixel = 0
+BackgroundImage.Image = backgroundImageId
+BackgroundImage.ScaleType = Enum.ScaleType.Crop -- Fills the UI nicely without distortion
+BackgroundImage.Parent = MainFrame
+
+-- Round corners for the background image
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 8)
+UICorner.Parent = BackgroundImage
+
+-- Title Bar
+local Title = Instance.new("TextLabel")
+Title.Name = "Title"
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.BackgroundTransparency = 1
+Title.Text = "LOADER"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 18
+Title.Font = Enum.Font.SourceSansBold
+Title.ZIndex = 2
+Title.Parent = MainFrame
+
+-- Close Button
+local CloseButton = Instance.new("TextButton")
+CloseButton.Name = "CloseButton"
+CloseButton.Size = UDim2.new(0, 30, 0, 30)
+CloseButton.Position = UDim2.new(1, -35, 0, 5)
+CloseButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+CloseButton.Text = "X"
+CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseButton.TextSize = 16
+CloseButton.Font = Enum.Font.SourceSansBold
+CloseButton.ZIndex = 2
+CloseButton.Parent = MainFrame
+
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(0, 6)
+CloseCorner.Parent = CloseButton
+
+CloseButton.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+
+-- Button Layout Container
+local ButtonContainer = Instance.new("Frame")
+ButtonContainer.Name = "ButtonContainer"
+ButtonContainer.Size = UDim2.new(1, -20, 1, -60)
+ButtonContainer.Position = UDim2.new(0, 10, 0, 50)
+ButtonContainer.BackgroundTransparency = 1
+ButtonContainer.ZIndex = 2
+ButtonContainer.Parent = MainFrame
+
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.Padding = UDim.new(0, 10)
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Parent = ButtonContainer
+
+-- Helper function to generate buttons easily
+local function CreateScriptButton(name, callback)
+    local Button = Instance.new("TextButton")
+    Button.Size = UDim2.new(1, 0, 0, 40)
+    Button.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    Button.BackgroundTransparency = 0.3 -- Slightly see-through to let the background image peek through
+    Button.BorderSizePixel = 0
+    Button.Text = name
+    Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Button.TextSize = 16
+    Button.Font = Enum.Font.SourceSansBold
+    Button.ZIndex = 3
+
+    local BtnCorner = Instance.new("UICorner")
+    BtnCorner.CornerRadius = UDim.new(0, 6)
+    BtnCorner.Parent = Button
+
+    -- Hover animations
+    Button.MouseEnter:Connect(function()
+        Button.BackgroundTransparency = 0.1
+    end)
+    Button.MouseLeave:Connect(function()
+        Button.BackgroundTransparency = 0.3
+    end)
+
+    -- Click action
+    Button.MouseButton1Click:Connect(function()
+        local success, err = pcall(callback)
+        if not success then
+            warn("Failed to run script: " .. tostring(err))
+        end
+    end)
+
+    Button.Parent = ButtonContainer
+end
+
+-- ==========================================================
+-- SCRIPT ATTACHMENT
+-- ==========================================================
+
+-- Loaded from your provided URL
+CreateScriptButton("Load Time Bomb Script", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/YUTASTUDIO/YUTASTUDIO/refs/heads/main/TIME%20BOMB%20SCRIPT"))()
+end)
