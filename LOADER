@@ -26,7 +26,7 @@ end
 
 -- Create the ScreenGui inside CoreGui
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "LOADER"
+ScreenGui.Name = "YUTASTUDIO LOADER"
 ScreenGui.Parent = game.CoreGui
 ScreenGui.ResetOnSpawn = false
 
@@ -143,6 +143,6 @@ end
 -- ==========================================================
 
 -- Loaded from your provided URL
-CreateScriptButton("Load Time Bomb Script", function()
+CreateScriptButton("Time Bomb script", function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/YUTASTUDIO/YUTASTUDIO/refs/heads/main/TIME%20BOMB%20SCRIPT"))()
 end)
