@@ -108,6 +108,6 @@ end
 -- ==========================================================
 
 -- Example format to add your own script:
--- CreateScriptButton("My Script Name", function()
---     print("Put your code here!")
+-- CreateScriptButton("TIME BOMB", function()
+--     print("https://raw.githubusercontent.com/YUTASTUDIO/YUTASTUDIO/refs/heads/main/TIME%20BOMB%20SCRIPT")
 -- end)
