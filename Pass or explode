@@ -45,7 +45,7 @@ local SaveManager = loadstring(game:HttpGet(repo .. "addons/SaveManager.lua"))()
 local function playExecutionSound()
     pcall(function()
         local sound = Instance.new("Sound")
-        sound.SoundId = "rbxassetid://1380908873" -- Notification chime
+        sound.SoundId = "rbxassetid://8323804973" -- Notification chime
         sound.Volume = 0.5
         sound.PlayOnRemove = false
         sound.Parent = SoundService
