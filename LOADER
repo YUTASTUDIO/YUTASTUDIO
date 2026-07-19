@@ -6,7 +6,7 @@ end
 -- ==========================================================
 -- BACKGROUND IMAGE DOWNLOADER
 -- ==========================================================
-local IMAGE_URL = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ52azag0iJvm6f6ebE4epOWcaP270WdqfN2QfvvmPE2w&s=10"
+local IMAGE_URL = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRq6yriKDq5GUQFmca2BXbXJsM5Zmo0o18xYMU4-UihcQ&s=10"
 local FILE_NAME = "loader_bg.png"
 local backgroundImageId = ""
 
