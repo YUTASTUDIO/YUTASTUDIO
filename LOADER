@@ -60,7 +60,7 @@ local Title = Instance.new("TextLabel")
 Title.Name = "Title"
 Title.Size = UDim2.new(1, 0, 0, 40)
 Title.BackgroundTransparency = 1
-Title.Text = "LOADER"
+Title.Text = "YUTASTUDIO LOADER"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 18
 Title.Font = Enum.Font.SourceSansBold
@@ -144,5 +144,5 @@ end
 
 -- Loaded from your provided URL
 CreateScriptButton("Time Bomb script", function()
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/YUTASTUDIO/YUTASTUDIO/refs/heads/main/TIME%20BOMB%20SCRIPT"))()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/YUTASTUDIO/YUTASTUDIO/refs/heads/main/Pass%20or%20explode"))()
 end)
