@@ -2,7 +2,7 @@
 -- MADE BY YUTASTUDIO
 -- 2.0
 -- ==========================================
-local IMAGE_URL = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQIK_gAl67Gh8XXcioFEnjlTLAW_FLBs0QsIKnLR5MwCg&s=10"
+local IMAGE_URL = "https://images3.alphacoders.com/137/thumb-1920-1371136.png"
 -- ==========================================
 
 -- --- GLOBAL CLEANUP HANDLER (ANTI-REEXECUTE) ---
@@ -764,8 +764,8 @@ ThemeManager:ApplyToTab(Tabs.Settings)
 
 -- Add standard frame keys
 local MenuBindGroup = Tabs.Settings:AddLeftGroupbox("Menu Binding Operations")
-MenuBindGroup:AddLabel("Toggle Keybind"):AddKeyPicker("MenuKeybind", { Default = "RightShift", NoUI = true, Text = "Menu keybind" })
-MenuBindGroup:AddButton("Completely Unload Script Instance", function() Library:Unload() end)
+MenuBindGroup:AddLabel("Keybind"):AddKeyPicker("MenuKeybind", { Default = "RightShift", NoUI = true, Text = "Menu keybind" })
+MenuBindGroup:AddButton("Unload", function() Library:Unload() end)
 Library.ToggleKeybind = Options.MenuKeybind
 
 -- --- CLEANUP UTILITY ARMED ---
