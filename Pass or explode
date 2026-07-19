@@ -63,7 +63,7 @@ local function getLoadingImage()
     local defaultAsset = "rbxassetid://1234567890"
     local success, result = pcall(function()
         if writefile and getcustomasset and readfile then
-            local fileName = "yutastudio_loading_screen.png"
+            local fileName = "yutastudio_loading_screen_v2.png"
             if not isfile(fileName) then writefile(fileName, game:HttpGet(IMAGE_URL)) end
             return getcustomasset(fileName)
         end
