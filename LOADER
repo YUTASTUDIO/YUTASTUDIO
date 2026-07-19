@@ -143,6 +143,6 @@ end
 -- ==========================================================
 
 -- Loaded from your provided URL
-CreateScriptButton("Time Bomb script", function()
+CreateScriptButton("PASS OR EXPLODE", function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/YUTASTUDIO/YUTASTUDIO/refs/heads/main/Pass%20or%20explode"))()
 end)
