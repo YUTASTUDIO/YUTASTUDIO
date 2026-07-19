@@ -7,7 +7,7 @@ end
 -- BACKGROUND IMAGE DOWNLOADER
 -- ==========================================================
 local IMAGE_URL = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRq6yriKDq5GUQFmca2BXbXJsM5Zmo0o18xYMU4-UihcQ&s=10"
-local FILE_NAME = "loader_bg.png"
+local FILE_NAME = "loader_bg_v1.png"
 local backgroundImageId = ""
 
 -- Attempt to download and use the external web image via executor functions
