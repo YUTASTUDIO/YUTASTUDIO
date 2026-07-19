@@ -689,12 +689,12 @@ InfoGroup:AddButton({
 
 -- 1. Bomb Operations
 LeftGroup:AddToggle("AntiPassBomb", {
-    Text = "ANTI PASS", Default = false, Tooltip = "Instantly evades nearby bombs.",
+    Text = "ANTI PASS", Default = false, Tooltip = "Anti pass bomb",
     Callback = function(State) antiPassBombEnabled = State if not State then removeEvadePlatform() end end
 })
 
 LeftGroup:AddToggle("AutoPassBomb", {
-    Text = "AUTO PASS", Default = false, Tooltip = "Loops automation processes.",
+    Text = "AUTO PASS", Default = false, Tooltip = "Automatic pass",
     Callback = function(State) autoPassEnabled = State end
 })
 
@@ -729,7 +729,7 @@ VisualGroup:AddSlider("HitboxTransparencySlider", {Text = "HITBOX TRANSPARENCY",
 -- --- RIGHT COLUMN ---
 
 -- 4. FIGHTING
-AntiGroup:AddToggle("AntiFlingToggle", {Text = "ANTI KNOCKBACK (REQUIRED SHIFTLOCK)", Default = false, Callback = function(s) antiFlingEnabled = s end})
+AntiGroup:AddToggle("AntiFlingToggle", {Text = "ANTI KNOCKBACK", Default = false, Callback = function(s) antiFlingEnabled = s end})
 
 -- 5. MOVEMENT
 MovementGroup:AddButton({Text = "Execute Fly v3", Func = function() pcall(loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Fly-V3-X-132770"))) end})
@@ -763,8 +763,8 @@ SaveManager:BuildConfigSection(Tabs.Settings)
 ThemeManager:ApplyToTab(Tabs.Settings)
 
 -- Add standard frame keys
-local MenuBindGroup = Tabs.Settings:AddLeftGroupbox("Menu Binding Operations")
-MenuBindGroup:AddLabel("Keybind"):AddKeyPicker("MenuKeybind", { Default = "RightShift", NoUI = true, Text = "Menu keybind" })
+local MenuBindGroup = Tabs.Settings:AddLeftGroupbox("Keybind")
+MenuBindGroup:AddLabel("Keybind"):AddKeyPicker("MenuKeybind", { Default = "...", NoUI = true, Text = "Menu keybind" })
 MenuBindGroup:AddButton("Unload", function() Library:Unload() end)
 Library.ToggleKeybind = Options.MenuKeybind
 
@@ -782,5 +782,5 @@ end
 
 Library:OnUnload(function()
     if getgenv().YutaStudio_Cleanup then pcall(getgenv().YutaStudio_Cleanup) end
-    print("Cleaned asset instances safely!")
+    print("Cleaned safely!")
 end)
