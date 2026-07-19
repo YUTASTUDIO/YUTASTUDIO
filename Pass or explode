@@ -2,7 +2,7 @@
 -- MADE BY YUTASTUDIO
 -- 2.0
 -- ==========================================
-local IMAGE_URL = "https://images3.alphacoders.com/137/thumb-1920-1371136.png"
+local IMAGE_URL = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQl_ivNnkGhZPYiNpa-SDZnJOowGpORd-3Yb2x_cUAUlA&s=10"
 -- ==========================================
 
 -- --- GLOBAL CLEANUP HANDLER (ANTI-REEXECUTE) ---
