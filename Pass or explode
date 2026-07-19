@@ -1,0 +1,786 @@
+-- ==========================================
+-- MADE BY YUTASTUDIO
+-- 2.0
+-- ==========================================
+local IMAGE_URL = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQIK_gAl67Gh8XXcioFEnjlTLAW_FLBs0QsIKnLR5MwCg&s=10"
+-- ==========================================
+
+-- --- GLOBAL CLEANUP HANDLER (ANTI-REEXECUTE) ---
+if getgenv().YutaStudio_Cleanup then
+    pcall(getgenv().YutaStudio_Cleanup)
+end
+
+-- Roblox Services
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TeleportService = game:GetService("TeleportService")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local CoreGui = game:GetService("CoreGui")
+local Lighting = game:GetService("Lighting")
+local SoundService = game:GetService("SoundService")
+local LocalPlayer = Players.LocalPlayer
+
+-- Unique identifier names for cleanup targeting
+local UI_SCREEN_NAME = "YutaStudio_Explode_Window"
+local LOADING_SCREEN_NAME = "YutaStudio_LoadingImage"
+
+-- Clean up remaining standalone instances from a previous run
+for _, child in ipairs(CoreGui:GetChildren()) do
+    if child.Name == UI_SCREEN_NAME or child.Name == LOADING_SCREEN_NAME then
+        pcall(function() child:Destroy() end)
+    end
+end
+
+-- Load LinoriaLib UI Framework
+local repo = "https://raw.githubusercontent.com/deividcomsono/Obsidian/main/"
+local Library = loadstring(game:HttpGet(repo .. "Library.lua"))()
+local ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))()
+local SaveManager = loadstring(game:HttpGet(repo .. "addons/SaveManager.lua"))()
+
+local Options = Library.Options
+local Toggles = Library.Toggles
+
+Library.ForceCheckbox = false 
+Library.ShowToggleFrameInKeybinds = true 
+
+-- --- EXECUTION SOUND ENGINE ---
+local function playExecutionSound()
+    pcall(function()
+        local sound = Instance.new("Sound")
+        sound.SoundId = "rbxassetid://8323804973"
+        sound.Volume = 0.5
+        sound.Parent = SoundService
+        sound:Play()
+        task.delay(3, function() sound:Destroy() end)
+    end)
+end
+
+-- --- DYNAMIC IMAGE DOWNLOADER ---
+local function getLoadingImage()
+    local defaultAsset = "rbxassetid://1234567890"
+    local success, result = pcall(function()
+        if writefile and getcustomasset and readfile then
+            local fileName = "yutastudio_loading_screen.png"
+            if not isfile(fileName) then writefile(fileName, game:HttpGet(IMAGE_URL)) end
+            return getcustomasset(fileName)
+        end
+    end)
+    return (success and result) and result or defaultAsset
+end
+
+local FINAL_IMAGE = getLoadingImage()
+
+-- --- IMAGE LOADING SCREEN SYSTEM ---
+local function playLoadingScreen()
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = LOADING_SCREEN_NAME
+    screenGui.IgnoreGuiInset = true
+    screenGui.DisplayOrder = 99999
+    screenGui.Parent = CoreGui:FindFirstChild("RobloxGui") or CoreGui or LocalPlayer:WaitForChild("PlayerGui")
+
+    task.delay(6, function() if screenGui and screenGui.Parent then screenGui:Destroy() end end)
+
+    local bgFrame = Instance.new("Frame")
+    bgFrame.Size = UDim2.new(1, 0, 1, 0)
+    bgFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 12)
+    bgFrame.BorderSizePixel = 0
+    bgFrame.Parent = screenGui
+
+    local imageFrame = Instance.new("ImageLabel")
+    imageFrame.Size = UDim2.new(1, 0, 1, 0)
+    imageFrame.Image = FINAL_IMAGE
+    imageFrame.ScaleType = Enum.ScaleType.Crop
+    imageFrame.BackgroundTransparency = 1
+    imageFrame.Parent = bgFrame
+
+    local vignette = Instance.new("ImageLabel")
+    vignette.Size = UDim2.new(1, 0, 1, 0)
+    vignette.BackgroundTransparency = 1
+    vignette.Image = "rbxassetid://6924716762"
+    vignette.ImageColor3 = Color3.fromRGB(0, 0, 0)
+    vignette.ImageTransparency = 0.2
+    vignette.Parent = bgFrame
+
+    local overlay = Instance.new("Frame")
+    overlay.Size = UDim2.new(0, 450, 0, 200)
+    overlay.Position = UDim2.new(0.5, -225, 0.75, -100)
+    overlay.BackgroundTransparency = 1
+    overlay.Parent = bgFrame
+
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Size = UDim2.new(1, 0, 0, 30)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Text = "YUTASTUDIO HUB"
+    titleLabel.Font = Enum.Font.GothamBold
+    titleLabel.TextSize = 24
+    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    titleLabel.Parent = overlay
+
+    local statusLabel = Instance.new("TextLabel")
+    statusLabel.Size = UDim2.new(1, 0, 0, 20)
+    statusLabel.Position = UDim2.new(0, 0, 0, 35)
+    statusLabel.BackgroundTransparency = 1
+    statusLabel.Text = "Synchronizing client assets..."
+    statusLabel.Font = Enum.Font.GothamMedium
+    statusLabel.TextSize = 14
+    statusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    statusLabel.Parent = overlay
+
+    local barBg = Instance.new("Frame")
+    barBg.Size = UDim2.new(0.8, 0, 0, 6)
+    barBg.Position = UDim2.new(0.1, 0, 0, 70)
+    barBg.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+    barBg.BorderSizePixel = 0
+    barBg.Parent = overlay
+
+    local barBgCorner = Instance.new("UICorner")
+    barBgCorner.CornerRadius = UDim.new(0.5, 0)
+    barBgCorner.Parent = barBg
+
+    local barFill = Instance.new("Frame")
+    barFill.Size = UDim2.new(0, 0, 1, 0)
+    barFill.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+    barFill.BorderSizePixel = 0
+    barFill.Parent = barBg
+
+    local barFillCorner = Instance.new("UICorner")
+    barFillCorner.CornerRadius = UDim.new(0.5, 0)
+    barFillCorner.Parent = barFill
+
+    local steps = {
+        {progress = 0.15, text = "Starting..."},
+        {progress = 0.45, text = "Loading..."},
+        {progress = 0.85, text = "Injecting Ui..."},
+        {progress = 1.00, text = "Ready!"}
+    }
+
+    for _, step in ipairs(steps) do
+        statusLabel.Text = step.text
+        TweenService:Create(barFill, TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(step.progress, 0, 1, 0)}):Play()
+        task.wait(0.7)
+    end
+
+    playExecutionSound()
+
+    TweenService:Create(bgFrame, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 1}):Play()
+    TweenService:Create(imageFrame, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {ImageTransparency = 1}):Play()
+    
+    for _, child in ipairs(overlay:GetChildren()) do
+        if child:IsA("TextLabel") then
+            TweenService:Create(child, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 1}):Play()
+        elseif child:IsA("Frame") then
+            TweenService:Create(child, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 1}):Play()
+            for _, inner in ipairs(child:GetChildren()) do
+                if inner:IsA("Frame") then TweenService:Create(inner, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 1}):Play() end
+            end
+        end
+    end
+    
+    TweenService:Create(vignette, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {ImageTransparency = 1}):Play()
+    task.wait(0.6)
+    screenGui:Destroy()
+end
+
+pcall(playLoadingScreen)
+
+-- --- INITIALIZE WINDOW ---
+local Window = Library:CreateWindow({
+    Title = "YUTASTUDIO HUB",
+    Center = true,
+    AutoShow = true,
+    Resizable = true,
+    ShowCustomCursor = true,
+    NotifySide = "Right",
+    Footer = "YUTASTUDIO HUB 2.0"
+})
+
+if Window.Holder and Window.Holder.Parent then
+    Window.Holder.Parent.Name = UI_SCREEN_NAME
+end
+
+-- --- APPLY CUSTOM BLACK & RED THEME PROFILE ---
+local DarkRedTheme = {
+    MainColor = Color3.fromRGB(12, 12, 14),
+    BackgroundColor = Color3.fromRGB(18, 18, 22),
+    AccentColor = Color3.fromRGB(220, 30, 30),
+    OutlineColor = Color3.fromRGB(35, 35, 40),
+    TextColor = Color3.fromRGB(255, 255, 255)
+}
+for OptionName, ColorValue in pairs(DarkRedTheme) do
+    pcall(function() Library.Scheme[OptionName] = ColorValue end)
+end
+pcall(function() Library:UpdateColors() end)
+
+-- Tabs Structure
+local Tabs = {
+    Main = Window:AddTab("Main Features", "user"),
+    Information = Window:AddTab("Information", "info"),
+    Settings = Window:AddTab("UI Settings", "settings")
+}
+
+-- Groupboxes (Organized within Main Features Columns)
+local LeftGroup = Tabs.Main:AddLeftGroupbox("Bomb Operations", "boxes")
+local TargetGroup = Tabs.Main:AddLeftGroupbox("Target Teleportation", "user")
+local VisualGroup = Tabs.Main:AddLeftGroupbox("Visual Customization", "eye")
+
+local AntiGroup = Tabs.Main:AddRightGroupbox("Defensive Modules", "shield")
+local MovementGroup = Tabs.Main:AddRightGroupbox("Movement Controls", "zap")
+local ProtectionGroup = Tabs.Main:AddRightGroupbox("Security Management", "shield")
+local PerfGroup = Tabs.Main:AddRightGroupbox("Performance Controls", "zap")
+
+-- Information Tab Layout
+local InfoGroup = Tabs.Information:AddLeftGroupbox("Script Metadata", "info")
+
+-- --- CONFIG STATE ---
+local autoPassEnabled = false
+local antiPassBombEnabled = false
+local antiFlingEnabled = false
+local hitboxEspEnabled = false
+local bombEspEnabled = false
+local espEnabled = false
+local hitboxTransparencyValue = 0.6
+local virtualManagerEnabled = false
+local avoidBanKickEnabled = false
+local fpsBoosterEnabled = false
+local selectedPlayerName = ""
+local speedBoostEnabled = false
+local speedBoostValue = 16
+local jumpBoostEnabled = false
+local jumpBoostValue = 50
+local infiniteJumpEnabled = false
+local noclipEnabled = false
+
+local ScriptConnections = {}
+
+-- --- ANTI-BAN / AVOID KICK HOOK ---
+local oldNamecall
+oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+    local method = getnamecallmethod()
+    if avoidBanKickEnabled and string.lower(method) == "kick" and self == LocalPlayer then
+        Library:Notify({
+            Title = "PROTECT ENGINE",
+            Description = "Blocked an attempted server kick/ban action successfully.",
+            Time = 5
+        })
+        return nil
+    end
+    return oldNamecall(self, ...)
+end)
+
+-- --- HELPER FUNCTIONS ---
+local function getActiveCharacter()
+    local char = LocalPlayer.Character
+    if not char then return nil end
+    local root = char:FindFirstChild("HumanoidRootPart")
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if root and hum and hum.Health > 0 and hum:GetState() ~= Enum.HumanoidStateType.Dead then
+        return char, root, hum
+    end
+    return nil
+end
+
+local function safeTeleport(targetPart, offset)
+    local _, myRoot, _ = getActiveCharacter()
+    if not myRoot or not targetPart then return end
+    offset = offset or CFrame.new(0, 0, 0)
+    myRoot.AssemblyLinearVelocity = Vector3.zero
+    myRoot.AssemblyAngularVelocity = Vector3.zero
+    myRoot.CFrame = targetPart.CFrame * offset
+    RunService.Heartbeat:Wait()
+    _, myRoot, _ = getActiveCharacter()
+    if myRoot then
+        myRoot.AssemblyLinearVelocity = Vector3.zero
+        myRoot.AssemblyAngularVelocity = Vector3.zero
+    end
+end
+
+local function isNearSpawn(position)
+    for _, obj in ipairs(Workspace:GetDescendants()) do
+        if obj:IsA("SpawnLocation") and (position - obj.Position).Magnitude < 15 then return true end
+    end
+    local lobby = Workspace:FindFirstChild("Lobby") or Workspace:FindFirstChild("Spawn") or Workspace:FindFirstChild("SpawnArea")
+    if lobby then
+        if lobby:IsA("BasePart") and (position - lobby.Position).Magnitude < 25 then return true
+        elseif lobby:IsA("Model") then
+            local primary = lobby.PrimaryPart or lobby:FindFirstChildOfClass("BasePart")
+            if primary and (position - primary.Position).Magnitude < 25 then return true end
+        end
+    end
+    return false
+end
+
+local function getClosestPlayer()
+    local closestPlayer = nil
+    local shortestDistance = math.huge
+    local _, myRoot, _ = getActiveCharacter()
+    if not myRoot then return nil end
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and player.Character:IsDescendantOf(Workspace) then
+            local targetRoot = player.Character:FindFirstChild("HumanoidRootPart")
+            local targetHum = player.Character:FindFirstChildOfClass("Humanoid")
+            if targetRoot and targetHum and targetHum.Health > 0 and targetHum:GetState() ~= Enum.HumanoidStateType.Dead then
+                if not player.Character:FindFirstChildOfClass("ForceField") and not isNearSpawn(targetRoot.Position) then
+                    local dist = (myRoot.Position - targetRoot.Position).Magnitude
+                    if dist < shortestDistance then
+                        shortestDistance = dist
+                        closestPlayer = player
+                    end
+                end
+            end
+        end
+    end
+    return closestPlayer
+end
+
+-- --- FEATURE LOOPS ---
+table.insert(ScriptConnections, RunService.Heartbeat:Connect(function()
+    local _, _, myHum = getActiveCharacter()
+    if myHum then
+        if speedBoostEnabled then myHum.WalkSpeed = speedBoostValue end
+        if jumpBoostEnabled then
+            if myHum.UseJumpPower then myHum.JumpPower = jumpBoostValue else myHum.JumpHeight = jumpBoostValue end
+        end
+    end
+end))
+
+table.insert(ScriptConnections, UserInputService.JumpRequest:Connect(function()
+    if not infiniteJumpEnabled then return end 
+    local _, myRoot, myHum = getActiveCharacter()
+    if myRoot and myHum then myHum:ChangeState(Enum.HumanoidStateType.Jumping) end
+end))
+
+table.insert(ScriptConnections, RunService.Stepped:Connect(function()
+    if not noclipEnabled then return end
+    local myChar = LocalPlayer.Character
+    if myChar then
+        for _, part in ipairs(myChar:GetChildren()) do
+            if part:IsA("BasePart") then part.CanCollide = false end
+        end
+    end
+end))
+
+table.insert(ScriptConnections, RunService.Stepped:Connect(function()
+    if not antiFlingEnabled then return end
+    pcall(function()
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character then
+                for _, part in ipairs(player.Character:GetChildren()) do
+                    if part:IsA("BasePart") then part.CanCollide = false end
+                end
+            end
+        end
+        local _, myRoot, _ = getActiveCharacter()
+        if myRoot and (myRoot.AssemblyLinearVelocity.Magnitude > 120 or myRoot.AssemblyAngularVelocity.Magnitude > 120) then
+            myRoot.AssemblyLinearVelocity = Vector3.zero
+            myRoot.AssemblyAngularVelocity = Vector3.zero
+        end
+    end)
+end))
+
+local originalMaterials = {}
+local function clearEffectsAndSetPlastic(object)
+    if not fpsBoosterEnabled then return end
+    if object:IsA("BasePart") and object.Name ~= "YutaStudio_AntiFall" and object.Name ~= "YutaStudio_EvadePlatform" then
+        if not originalMaterials[object] then originalMaterials[object] = {Material = object.Material, Color = object.Color} end
+        object.Material = Enum.Material.SmoothPlastic
+    elseif object:IsA("Decal") or object:IsA("Texture") then object.Transparency = 1
+    elseif object:IsA("ParticleEmitter") or object:IsA("Smoke") or object:IsA("Fire") or object:IsA("Sparkles") or object:IsA("Trail") or object:IsA("Beam") then
+        object.Enabled = false
+    end
+end
+
+local fpsBoosterActive = true
+task.spawn(function()
+    while fpsBoosterActive do
+        task.wait(1)
+        if fpsBoosterEnabled then
+            pcall(function()
+                for _, obj in ipairs(Workspace:GetDescendants()) do clearEffectsAndSetPlastic(obj) end
+            end)
+        end
+    end
+end)
+
+table.insert(ScriptConnections, Workspace.DescendantAdded:Connect(function(desc) if fpsBoosterEnabled then task.wait() pcall(clearEffectsAndSetPlastic, desc) end end))
+
+local function restoreGameGraphics()
+    pcall(function()
+        for obj, data in pairs(originalMaterials) do if obj and obj.Parent then obj.Material = data.Material end end
+        table.clear(originalMaterials)
+        for _, obj in ipairs(Workspace:GetDescendants()) do
+            if obj:IsA("Decal") or obj:IsA("Texture") then obj.Transparency = 0
+            elseif obj:IsA("ParticleEmitter") or obj:IsA("Smoke") or obj:IsA("Fire") or obj:IsA("Sparkles") or obj:IsA("Trail") or obj:IsA("Beam") then obj.Enabled = true end
+        end
+    end)
+end
+
+local function playerHasBomb(player)
+    local char = player.Character
+    if not char then return false end
+    for _, child in ipairs(char:GetChildren()) do
+        if child:IsA("Tool") and (string.find(string.lower(child.Name), "bomb") or string.find(string.lower(child.Name), "pass") or string.find(string.lower(child.Name), "tag")) then return true end
+    end
+    local bp = player:FindFirstChild("Backpack")
+    if bp then
+        for _, child in ipairs(bp:GetChildren()) do
+            if child:IsA("Tool") and (string.find(string.lower(child.Name), "bomb") or string.find(string.lower(child.Name), "pass") or string.find(string.lower(child.Name), "tag")) then return true end
+        end
+    end
+    for _, child in ipairs(char:GetDescendants()) do
+        if (child:IsA("BasePart") or child:IsA("Model")) and (string.find(string.lower(child.Name), "bomb") or string.find(string.lower(child.Name), "explosive")) then return true end
+    end
+    return false
+end
+
+local tempEvadePlatform = nil
+local function removeEvadePlatform() if tempEvadePlatform then tempEvadePlatform:Destroy() tempEvadePlatform = nil end end
+
+local antiPassActive = true
+task.spawn(function()
+    while antiPassActive do
+        task.wait(0.05)
+        if antiPassBombEnabled then
+            local myChar, myRoot, myHum = getActiveCharacter()
+            local isThreatNearby = false
+            if myRoot and myHum and myHum.Health > 0 then
+                for _, player in ipairs(Players:GetPlayers()) do
+                    if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and playerHasBomb(player) then
+                        local targetRoot = player.Character.HumanoidRootPart
+                        if (myRoot.Position - targetRoot.Position).Magnitude < 25 then
+                            isThreatNearby = true
+                            if not tempEvadePlatform or tempEvadePlatform.Parent ~= Workspace then
+                                removeEvadePlatform()
+                                tempEvadePlatform = Instance.new("Part")
+                                tempEvadePlatform.Name = "YutaStudio_EvadePlatform"
+                                tempEvadePlatform.Size = Vector3.new(15, 1, 15)
+                                tempEvadePlatform.Position = myRoot.Position + Vector3.new(0, 45, 0)
+                                tempEvadePlatform.Anchored = true
+                                tempEvadePlatform.CanCollide = true
+                                tempEvadePlatform.Parent = Workspace
+                            end
+                            myRoot.CFrame = CFrame.new(tempEvadePlatform.Position + Vector3.new(0, 3, 0))
+                            break
+                        end
+                    end
+                end
+            end
+            if not isThreatNearby then removeEvadePlatform() end
+        else removeEvadePlatform() end
+    end
+end)
+
+-- --- ESP SYSTEMS ---
+local function clearAllESP()
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player.Character then
+            local hl = player.Character:FindFirstChild("YutaStudio_ESP") if hl then hl:Destroy() end
+            local hb = player.Character:FindFirstChild("YutaStudio_HitboxESP") if hb then hb:Destroy() end
+        end
+    end
+    for _, obj in ipairs(Workspace:GetDescendants()) do if obj.Name == "YutaStudio_BombTextESP" then obj:Destroy() end end
+end
+
+local function createBombTextOverlay(parentPart)
+    if not parentPart:FindFirstChild("YutaStudio_BombTextESP") then
+        local bgui = Instance.new("BillboardGui")
+        bgui.Name = "YutaStudio_BombTextESP"
+        bgui.Size = UDim2.new(0, 120, 0, 35)
+        bgui.AlwaysOnTop = true
+        bgui.ExtentsOffset = Vector3.new(0, 3, 0)
+        local label = Instance.new("TextLabel", bgui)
+        label.Size = UDim2.new(1, 0, 1, 0)
+        label.BackgroundTransparency = 1
+        label.Text = "💣BOMB"
+        label.Font = Enum.Font.GothamBold
+        label.TextSize = 14
+        label.TextColor3 = Color3.fromRGB(255, 30, 30)
+        label.TextStrokeTransparency = 0
+        bgui.Parent = parentPart
+    end
+end
+
+local espActive = true
+task.spawn(function()
+    while espActive do
+        task.wait(0.25)
+        if espEnabled or hitboxEspEnabled or bombEspEnabled then
+            pcall(function()
+                if not bombEspEnabled then
+                    for _, obj in ipairs(Workspace:GetDescendants()) do if obj.Name == "YutaStudio_BombTextESP" then obj:Destroy() end end
+                end
+                for _, player in ipairs(Players:GetPlayers()) do
+                    local char = player.Character
+                    if char and char:FindFirstChild("HumanoidRootPart") and char:FindFirstChild("Humanoid") and char.Humanoid.Health > 0 then
+                        local hasBomb = playerHasBomb(player)
+                        if bombEspEnabled and hasBomb then createBombTextOverlay(char.HumanoidRootPart)
+                        elseif player ~= LocalPlayer and char.HumanoidRootPart:FindFirstChild("YutaStudio_BombTextESP") then char.HumanoidRootPart.YutaStudio_BombTextESP:Destroy() end
+
+                        if player ~= LocalPlayer then
+                            local color = hasBomb and Color3.fromRGB(255, 0, 0) or Color3.fromRGB(0, 255, 0)
+                            if espEnabled then
+                                local hl = char:FindFirstChild("YutaStudio_ESP") or Instance.new("Highlight", char)
+                                hl.Name = "YutaStudio_ESP" hl.FillTransparency = 0.75 hl.OutlineTransparency = 0.1
+                                hl.FillColor = color hl.OutlineColor = color
+                            else local hl = char:FindFirstChild("YutaStudio_ESP") if hl then hl:Destroy() end end
+
+                            if hitboxEspEnabled then
+                                local hb = char:FindFirstChild("YutaStudio_HitboxESP") or Instance.new("BoxHandleAdornment", char)
+                                hb.Name = "YutaStudio_HitboxESP" hb.AlwaysOnTop = true hb.ZIndex = 10 hb.Adornee = char.PrimaryPart or char.HumanoidRootPart
+                                local sz, csz = pcall(function() return char:GetExtentsSize() end) hb.Size = sz and csz or Vector3.new(4, 6, 4)
+                                hb.Color3 = color hb.Transparency = hitboxTransparencyValue
+                            else local hb = char:FindFirstChild("YutaStudio_HitboxESP") if hb then hb:Destroy() end end
+                        end
+                    end
+                end
+                if bombEspEnabled then
+                    for _, tool in ipairs(Workspace:GetChildren()) do
+                        if tool:IsA("Tool") and (string.find(string.lower(tool.Name), "bomb") or string.find(string.lower(tool.Name), "pass")) then
+                            local h = tool:FindFirstChild("Handle") or tool:FindFirstChildOfClass("BasePart") if h then createBombTextOverlay(h) end
+                        end
+                    end
+                end
+            end)
+        else pcall(clearAllESP) end
+    end
+end)
+
+local function findUniversalBomb()
+    local myChar = getActiveCharacter() if not myChar then return nil, nil end
+    for _, c in ipairs(myChar:GetChildren()) do if c:IsA("Tool") and (string.find(string.lower(c.Name), "bomb") or string.find(string.lower(c.Name), "pass")) then return c, "Tool" end end
+    for _, c in ipairs(myChar:GetDescendants()) do if (c:IsA("BasePart") or c:IsA("Model")) and (string.find(string.lower(c.Name), "bomb") or string.find(string.lower(c.Name), "explosive")) then return c, "WeldModel" end end
+    local bp = LocalPlayer:FindFirstChildOfClass("Backpack")
+    if bp then for _, c in ipairs(bp:GetChildren()) do if c:IsA("Tool") and (string.find(string.lower(c.Name), "bomb") or string.find(string.lower(c.Name), "pass")) then return c, "BackpackTool" end end end
+    return nil, nil
+end
+
+local function forceTransferBomb()
+    local bomb, bType = findUniversalBomb() if not bomb or not bomb.Parent then return end
+    local _, myRoot, myHum = getActiveCharacter() if not myRoot then return end
+    local target = getClosestPlayer() if not target or not target.Character then return end
+    local tRoot = target.Character:FindFirstChild("HumanoidRootPart")
+    if tRoot and target.Character.Humanoid.Health > 0 then
+        local oldCF = myRoot.CFrame
+        if bType == "BackpackTool" then myHum:EquipTool(bomb) task.wait(0.03) end
+        if myRoot and bomb.Parent then
+            safeTeleport(tRoot) task.wait(0.05)
+            if firetouchinterest then
+                local src = bomb:FindFirstChild("Handle") or bomb:FindFirstChildOfClass("BasePart") or myRoot
+                for _, p in ipairs(target.Character:GetChildren()) do if p:IsA("BasePart") then firetouchinterest(src, p, 0) task.wait() firetouchinterest(src, p, 1) end end
+            end
+            local _, rRoot, _ = getActiveCharacter() if rRoot then rRoot.CFrame = oldCF end
+        end
+    end
+end
+
+local autoPassActive = true
+task.spawn(function()
+    while autoPassActive do
+        task.wait(0.01)
+        if autoPassEnabled then
+            pcall(function()
+                local bomb, bType = findUniversalBomb()
+                if bomb and bomb.Parent then
+                    local _, myRoot, myHum = getActiveCharacter()
+                    local target = getClosestPlayer()
+                    if myRoot and target and target.Character then
+                        local tRoot = target.Character:FindFirstChild("HumanoidRootPart")
+                        if tRoot and target.Character.Humanoid.Health > 0 then
+                            local oldCF = myRoot.CFrame
+                            if bType == "BackpackTool" then myHum:EquipTool(bomb) task.wait(0.02) end
+                            if myRoot and bomb.Parent then
+                                safeTeleport(tRoot) task.wait(0.03)
+                                if firetouchinterest then
+                                    local src = bomb:FindFirstChild("Handle") or bomb:FindFirstChildOfClass("BasePart") or myRoot
+                                    for _, p in ipairs(target.Character:GetChildren()) do if p:IsA("BasePart") then firetouchinterest(src, p, 0) task.wait() firetouchinterest(src, p, 1) end end
+                                end
+                                task.wait(0.02)
+                                local _, rRoot, _ = getActiveCharacter() if rRoot then rRoot.CFrame = oldCF end
+                                task.wait(0.2)
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+local function getServerPlayerNames()
+    local names = {}
+    for _, p in ipairs(Players:GetPlayers()) do if p ~= LocalPlayer then table.insert(names, p.Name) end end
+    return names
+end
+
+local antiFallPart, antiFallConnection, antiFallEnabled = nil, nil, false
+local function removeAntiFall() if antiFallPart then antiFallPart:Destroy() antiFallPart = nil end if antiFallConnection then antiFallConnection:Disconnect() antiFallConnection = nil end end
+
+local function createAntiFall()
+    removeAntiFall() local _, myRoot, _ = getActiveCharacter()
+    if not myRoot then task.delay(0.5, function() if antiFallEnabled then createAntiFall() end end) return end
+    antiFallPart = Instance.new("Part") antiFallPart.Name = "YutaStudio_AntiFall" antiFallPart.Size = Vector3.new(3000, 2, 3000)
+    antiFallPart.Position = Vector3.new(myRoot.Position.X, myRoot.Position.Y - 8, myRoot.Position.Z) antiFallPart.CanCollide = true
+    antiFallPart.Transparency = 0.65 antiFallPart.Anchored = true antiFallPart.Parent = Workspace
+    antiFallConnection = RunService.Heartbeat:Connect(function()
+        local _, r, _ = getActiveCharacter() if r and antiFallPart then antiFallPart.Position = Vector3.new(r.Position.X, antiFallPart.Position.Y, r.Position.Z) end
+    end)
+    table.insert(ScriptConnections, antiFallConnection)
+end
+
+table.insert(ScriptConnections, LocalPlayer.CharacterAdded:Connect(function() task.wait(1) if antiFallEnabled then createAntiFall() end end))
+
+local function teleportToGreenPart()
+    local _, myRoot, _ = getActiveCharacter() if not myRoot then return end
+    local greenBlock = nil
+    for _, obj in ipairs(Workspace:GetDescendants()) do
+        if obj:IsA("BasePart") and obj.Transparency < 1 and obj.CanCollide and obj.Name ~= "YutaStudio_AntiFall" and obj.Name ~= "YutaStudio_EvadePlatform" then
+            local c = obj.Color
+            if (c.G > 0.6 and c.R < 0.4 and c.B < 0.4) or obj.BrickColor.Name == "Lime green" or obj.BrickColor.Name == "Bright green" then greenBlock = obj break end
+        end
+    end
+    if greenBlock then
+        myRoot.AssemblyLinearVelocity = Vector3.zero
+        myRoot.CFrame = CFrame.new(greenBlock.Position + Vector3.new(0, (greenBlock.Size.Y / 2) + 3, 0))
+        Library:Notify({Title = "TELEPORT SYSTEM", Description = "Successfully Finish", Time = 3})
+    else
+        Library:Notify({Title = "TELEPORT SYSTEM", Description = "NOT FOUND.", Time = 3})
+    end
+end
+
+-- ====================================================================
+-- INDEPENDENT EXCLUSIVE INFORMATION TAB DATA
+-- ====================================================================
+InfoGroup:AddLabel("CREDIT:")
+InfoGroup:AddLabel("- DEVELOPER:YUTASTUDIO")
+InfoGroup:AddLabel("- VERSION:2.0")
+InfoGroup:AddLabel("- STATUS:SAFE")
+
+InfoGroup:AddButton({
+    Text = "DISCORD",
+    Func = function()
+        pcall(function()
+            if setclipboard then
+                setclipboard("https://discord.gg/yjWU8nAx4")
+                Library:Notify({
+                    Title = "DISCORD LINK",
+                    Description = "Invite link successfully copied to your clipboard!",
+                    Time = 4
+                })
+            else
+                Library:Notify({
+                    Title = "ERROR",
+                    Description = "Your exploit execution level lacks clipboard permissions.",
+                    Time = 4
+                })
+            end
+        end)
+    end,
+    DoubleClick = false,
+    Tooltip = "COPIES IN CLIPBOARD."
+})
+
+-- ====================================================================
+-- RENDER ELEMENTS ALL INSIDE MAIN FEATURES TAB COLS
+-- ====================================================================
+
+-- --- LEFT COLUMN ---
+
+-- 1. Bomb Operations
+LeftGroup:AddToggle("AntiPassBomb", {
+    Text = "ANTI PASS", Default = false, Tooltip = "Instantly evades nearby bombs.",
+    Callback = function(State) antiPassBombEnabled = State if not State then removeEvadePlatform() end end
+})
+
+LeftGroup:AddToggle("AutoPassBomb", {
+    Text = "AUTO PASS", Default = false, Tooltip = "Loops automation processes.",
+    Callback = function(State) autoPassEnabled = State end
+})
+
+LeftGroup:AddButton({Text = "FORCE TRANSFER", Func = function() pcall(forceTransferBomb) end})
+LeftGroup:AddToggle("ANTIFALL", {Text = "ANTIFALL", Default = false, Callback = function(s) antiFallEnabled = s if s then createAntiFall() else removeAntiFall() end end})
+LeftGroup:AddButton({Text = "FINISH OBBY", Func = function() pcall(teleportToGreenPart) end})
+LeftGroup:AddButton({Text = "REJOIN", Func = function() pcall(table.unpack({function() if #Players:GetPlayers() <= 1 then TeleportService:Teleport(game.PlaceId, LocalPlayer) else TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer) end end})) end})
+
+-- 2. Target Settings
+local PlayerDropdown = TargetGroup:AddDropdown("TargetPlayerDropdown", {
+    Values = getServerPlayerNames(), Default = 1, Multi = false, Text = "SELECT TO TELEPORT",
+    Callback = function(v) selectedPlayerName = v end
+})
+
+TargetGroup:AddButton({Text = "SELECT TO TELEPORT", Func = function()
+    if selectedPlayerName == "" then return end
+    local p = Players:FindFirstChild(selectedPlayerName)
+    local r = p and p.Character and p.Character:FindFirstChild("HumanoidRootPart")
+    if r then safeTeleport(r, CFrame.new(0, 3, 0)) Library:Notify({Title = "TELEPORT", Description = "Teleported to " .. selectedPlayerName}) end
+end})
+
+table.insert(ScriptConnections, Players.PlayerAdded:Connect(function() PlayerDropdown:SetValues(getServerPlayerNames()) end))
+table.insert(ScriptConnections, Players.PlayerRemoving:Connect(function() PlayerDropdown:SetValues(getServerPlayerNames()) end))
+
+-- 3. ESP
+VisualGroup:AddToggle("ESPBombToggle", {Text = "ESP CHAMS", Default = false, Callback = function(s) espEnabled = s if not s then clearAllESP() end end})
+VisualGroup:AddToggle("HitboxESPToggle", {Text = "HITBOX ESP", Default = false, Callback = function(s) hitboxEspEnabled = s if not s then clearAllESP() end end})
+VisualGroup:AddToggle("BombESP", {Text = "ESP BOMB", Default = false, Callback = function(s) bombEspEnabled = s if not s then clearAllESP() end end})
+VisualGroup:AddSlider("HitboxTransparencySlider", {Text = "Hitbox Mask Transparency", Default = 0.6, Min = 0, Max = 1, Rounding = 1, Callback = function(v) hitboxTransparencyValue = v end})
+
+
+-- --- RIGHT COLUMN ---
+
+-- 4. FIGHTING
+AntiGroup:AddToggle("AntiFlingToggle", {Text = "ANTI KNOCKBACK", Default = false, Callback = function(s) antiFlingEnabled = s end})
+
+-- 5. MOVEMENT
+MovementGroup:AddButton({Text = "Execute Fly v3", Func = function() pcall(loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Fly-V3-X-132770"))) end})
+MovementGroup:AddToggle("SpeedBoostToggle", {Text = "SPEED BOOST", Default = false, Callback = function(s) speedBoostEnabled = s if not s then local _,_,h = getActiveCharacter() if h then h.WalkSpeed = 16 end end end})
+MovementGroup:AddSlider("SpeedBoostSlider", {Text = "WALKSPEED Value", Default = 32, Min = 16, Max = 150, Rounding = 0, Callback = function(v) speedBoostValue = v end})
+MovementGroup:AddToggle("JumpBoostToggle", {Text = "JUMP BOOST", Default = false, Callback = function(s) jumpBoostEnabled = s if not s then local _,_,h = getActiveCharacter() if h then h.JumpPower = 50 h.JumpHeight = 7.2 end end end})
+MovementGroup:AddSlider("JumpBoostSlider", {Text = "JUMP POWER Value", Default = 50, Min = 30, Max = 300, Rounding = 0, Callback = function(v) jumpBoostValue = v end})
+MovementGroup:AddToggle("InfiniteJumpToggle", {Text = "INFINITE JUMP", Default = false, Callback = function(s) infiniteJumpEnabled = s end})
+MovementGroup:AddToggle("NoclipToggle", {Text = "NOCLIP", Default = false, Callback = function(s) noclipEnabled = s end})
+
+-- 6. SECURITY
+ProtectionGroup:AddToggle("VirtualManagerToggle", {Text = "VIRTUAL MANAGER", Default = false, Callback = function(s) avoidBanKickEnabled = s settings().Physics.PhysicsEnvironmentalThrottle = s and Enum.EnviromentalPhysicsThrottle.Disabled or Enum.EnviromentalPhysicsThrottle.Default setfpscap(s and 240 or 60) end})
+ProtectionGroup:AddToggle("AvoidBanKickToggle", {Text = "PROTECT", Default = false, Callback = function(s) avoidBanKickEnabled = s end})
+
+-- 7. Performance
+PerfGroup:AddToggle("FPSBoosterToggle", {Text = "FPS BOOSTER", Default = false, Callback = function(s) fpsBoosterEnabled = s if not s then restoreGameGraphics() end end})
+
+
+-- ====================================================================
+-- AUTOMATED MANAGER INJECTIONS
+-- ====================================================================
+ThemeManager:SetLibrary(Library)
+SaveManager:SetLibrary(Library)
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetIgnoreIndexes({ "MenuKeybind" })
+ThemeManager:SetFolder("YutaStudioHub")
+SaveManager:SetFolder("YutaStudioHub/Explode")
+
+-- Render config manager items inside the dedicated UI Settings Column
+SaveManager:BuildConfigSection(Tabs.Settings)
+ThemeManager:ApplyToTab(Tabs.Settings)
+
+-- Add standard frame keys
+local MenuBindGroup = Tabs.Settings:AddLeftGroupbox("Menu Binding Operations")
+MenuBindGroup:AddLabel("Toggle Keybind"):AddKeyPicker("MenuKeybind", { Default = "RightShift", NoUI = true, Text = "Menu keybind" })
+MenuBindGroup:AddButton("Completely Unload Script Instance", function() Library:Unload() end)
+Library.ToggleKeybind = Options.MenuKeybind
+
+-- --- CLEANUP UTILITY ARMED ---
+getgenv().YutaStudio_Cleanup = function()
+    fpsBoosterActive = false antiPassActive = false espActive = false
+    for _, c in ipairs(ScriptConnections) do if c and c.Disconnect then pcall(function() c:Disconnect() end) end end
+    table.clear(ScriptConnections)
+    pcall(removeAntiFall) pcall(removeEvadePlatform) pcall(clearAllESP) pcall(restoreGameGraphics)
+    pcall(function()
+        local _, _, h = getActiveCharacter() if h then h.WalkSpeed = 16 h.JumpPower = 50 end
+    end)
+    for _, child in ipairs(CoreGui:GetChildren()) do if child.Name == UI_SCREEN_NAME then pcall(function() child:Destroy() end) end end
+end
+
+Library:OnUnload(function()
+    if getgenv().YutaStudio_Cleanup then pcall(getgenv().YutaStudio_Cleanup) end
+    print("Cleaned asset instances safely!")
+end)
