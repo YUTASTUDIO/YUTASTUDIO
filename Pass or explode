@@ -222,17 +222,17 @@ local Tabs = {
 }
 
 -- Groupboxes (Organized within Main Features Columns)
-local LeftGroup = Tabs.Main:AddLeftGroupbox("Bomb Operations", "boxes")
-local TargetGroup = Tabs.Main:AddLeftGroupbox("Target Teleportation", "user")
-local VisualGroup = Tabs.Main:AddLeftGroupbox("Visual Customization", "eye")
+local LeftGroup = Tabs.Main:AddLeftGroupbox("BOMB", "bomb")
+local TargetGroup = Tabs.Main:AddLeftGroupbox("TARGET", "user")
+local VisualGroup = Tabs.Main:AddLeftGroupbox("ESP", "eye")
 
-local AntiGroup = Tabs.Main:AddRightGroupbox("Defensive Modules", "shield")
-local MovementGroup = Tabs.Main:AddRightGroupbox("Movement Controls", "zap")
-local ProtectionGroup = Tabs.Main:AddRightGroupbox("Security Management", "shield")
-local PerfGroup = Tabs.Main:AddRightGroupbox("Performance Controls", "zap")
+local AntiGroup = Tabs.Main:AddRightGroupbox("FIGHTING ROUND", "sword")
+local MovementGroup = Tabs.Main:AddRightGroupbox("MOVEMENT", "zap")
+local ProtectionGroup = Tabs.Main:AddRightGroupbox("SECURITY", "shield")
+local PerfGroup = Tabs.Main:AddRightGroupbox("PERFORMANCE", "zap")
 
 -- Information Tab Layout
-local InfoGroup = Tabs.Information:AddLeftGroupbox("Script Metadata", "info")
+local InfoGroup = Tabs.Information:AddLeftGroupbox("INFO", "info")
 
 -- --- CONFIG STATE ---
 local autoPassEnabled = false
@@ -261,7 +261,7 @@ oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
     local method = getnamecallmethod()
     if avoidBanKickEnabled and string.lower(method) == "kick" and self == LocalPlayer then
         Library:Notify({
-            Title = "PROTECT ENGINE",
+            Title = "PROTECT",
             Description = "Blocked an attempted server kick/ban action successfully.",
             Time = 5
         })
@@ -664,14 +664,14 @@ InfoGroup:AddButton({
             if setclipboard then
                 setclipboard("https://discord.gg/yjWU8nAx4")
                 Library:Notify({
-                    Title = "DISCORD LINK",
+                    Title = "Discord",
                     Description = "Invite link successfully copied to your clipboard!",
                     Time = 4
                 })
             else
                 Library:Notify({
                     Title = "ERROR",
-                    Description = "Your exploit execution level lacks clipboard permissions.",
+                    Description = "Not found.",
                     Time = 4
                 })
             end
@@ -709,7 +709,7 @@ local PlayerDropdown = TargetGroup:AddDropdown("TargetPlayerDropdown", {
     Callback = function(v) selectedPlayerName = v end
 })
 
-TargetGroup:AddButton({Text = "SELECT TO TELEPORT", Func = function()
+TargetGroup:AddButton({Text = "TELEPORT", Func = function()
     if selectedPlayerName == "" then return end
     local p = Players:FindFirstChild(selectedPlayerName)
     local r = p and p.Character and p.Character:FindFirstChild("HumanoidRootPart")
@@ -723,7 +723,7 @@ table.insert(ScriptConnections, Players.PlayerRemoving:Connect(function() Player
 VisualGroup:AddToggle("ESPBombToggle", {Text = "ESP CHAMS", Default = false, Callback = function(s) espEnabled = s if not s then clearAllESP() end end})
 VisualGroup:AddToggle("HitboxESPToggle", {Text = "HITBOX ESP", Default = false, Callback = function(s) hitboxEspEnabled = s if not s then clearAllESP() end end})
 VisualGroup:AddToggle("BombESP", {Text = "ESP BOMB", Default = false, Callback = function(s) bombEspEnabled = s if not s then clearAllESP() end end})
-VisualGroup:AddSlider("HitboxTransparencySlider", {Text = "Hitbox Mask Transparency", Default = 0.6, Min = 0, Max = 1, Rounding = 1, Callback = function(v) hitboxTransparencyValue = v end})
+VisualGroup:AddSlider("HitboxTransparencySlider", {Text = "HITBOX TRANSPARENCY", Default = 0.6, Min = 0, Max = 1, Rounding = 1, Callback = function(v) hitboxTransparencyValue = v end})
 
 
 -- --- RIGHT COLUMN ---
@@ -734,9 +734,9 @@ AntiGroup:AddToggle("AntiFlingToggle", {Text = "ANTI KNOCKBACK", Default = false
 -- 5. MOVEMENT
 MovementGroup:AddButton({Text = "Execute Fly v3", Func = function() pcall(loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Fly-V3-X-132770"))) end})
 MovementGroup:AddToggle("SpeedBoostToggle", {Text = "SPEED BOOST", Default = false, Callback = function(s) speedBoostEnabled = s if not s then local _,_,h = getActiveCharacter() if h then h.WalkSpeed = 16 end end end})
-MovementGroup:AddSlider("SpeedBoostSlider", {Text = "WALKSPEED Value", Default = 32, Min = 16, Max = 150, Rounding = 0, Callback = function(v) speedBoostValue = v end})
+MovementGroup:AddSlider("SpeedBoostSlider", {Text = "VALUE SPEED", Default = 32, Min = 16, Max = 150, Rounding = 0, Callback = function(v) speedBoostValue = v end})
 MovementGroup:AddToggle("JumpBoostToggle", {Text = "JUMP BOOST", Default = false, Callback = function(s) jumpBoostEnabled = s if not s then local _,_,h = getActiveCharacter() if h then h.JumpPower = 50 h.JumpHeight = 7.2 end end end})
-MovementGroup:AddSlider("JumpBoostSlider", {Text = "JUMP POWER Value", Default = 50, Min = 30, Max = 300, Rounding = 0, Callback = function(v) jumpBoostValue = v end})
+MovementGroup:AddSlider("JumpBoostSlider", {Text = "VALUE JUMP POWER", Default = 50, Min = 30, Max = 300, Rounding = 0, Callback = function(v) jumpBoostValue = v end})
 MovementGroup:AddToggle("InfiniteJumpToggle", {Text = "INFINITE JUMP", Default = false, Callback = function(s) infiniteJumpEnabled = s end})
 MovementGroup:AddToggle("NoclipToggle", {Text = "NOCLIP", Default = false, Callback = function(s) noclipEnabled = s end})
 
