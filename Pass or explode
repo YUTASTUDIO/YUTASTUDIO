@@ -729,7 +729,7 @@ VisualGroup:AddSlider("HitboxTransparencySlider", {Text = "HITBOX TRANSPARENCY",
 -- --- RIGHT COLUMN ---
 
 -- 4. FIGHTING
-AntiGroup:AddToggle("AntiFlingToggle", {Text = "ANTI KNOCKBACK", Default = false, Callback = function(s) antiFlingEnabled = s end})
+AntiGroup:AddToggle("AntiFlingToggle", {Text = "ANTI KNOCKBACK (REQUIRED SHIFTLOCK)", Default = false, Callback = function(s) antiFlingEnabled = s end})
 
 -- 5. MOVEMENT
 MovementGroup:AddButton({Text = "Execute Fly v3", Func = function() pcall(loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Fly-V3-X-132770"))) end})
