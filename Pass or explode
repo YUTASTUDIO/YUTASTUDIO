@@ -2,7 +2,7 @@
 -- MADE BY YUTASTUDIO
 -- 2.0
 -- ==========================================
-local IMAGE_URL = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQl_ivNnkGhZPYiNpa-SDZnJOowGpORd-3Yb2x_cUAUlA&s=10"
+local IMAGE_URL = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRq6yriKDq5GUQFmca2BXbXJsM5Zmo0o18xYMU4-UihcQ&s=10"
 -- ==========================================
 
 -- --- GLOBAL CLEANUP HANDLER (ANTI-REEXECUTE) ---
@@ -63,7 +63,7 @@ local function getLoadingImage()
     local defaultAsset = "rbxassetid://1234567890"
     local success, result = pcall(function()
         if writefile and getcustomasset and readfile then
-            local fileName = "yutastudio_loading_screen_v2.png"
+            local fileName = "yutastudio_loading_screen_v1.png"
             if not isfile(fileName) then writefile(fileName, game:HttpGet(IMAGE_URL)) end
             return getcustomasset(fileName)
         end
